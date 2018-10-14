@@ -25,9 +25,18 @@
 
     "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": {"url": "https://vega.github.io/editor/data/seattle-weather.csv"},
-        "mark": "tick",
+        "mark": "bar",
         "encoding": {
-            "x": {"field": "precipitation", "type": "quantitative"}
+            "x": {
+                "bin": true,
+                "field": "precipitation",
+                "type": "quantitative"
+            },
+            "y": {
+                "aggregate": "count",
+                "field": "*",
+                "type": "quantitative"
+            }
         }
     };
 

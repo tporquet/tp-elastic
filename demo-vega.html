@@ -25,20 +25,21 @@
 
     "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
         "data": {"url": "https://vega.github.io/editor/data/seattle-weather.csv"},
-        "transform": [
-            {"calculate": "datum.temp_max - datum.temp_min","as": "temp_range"}
-        ],
-        "mark": "line",
+        "mark": "bar",
         "encoding": {
             "x": {
                 "timeUnit": "month",
                 "field": "date",
-                "type": "temporal"
+                "type": "ordinal"
             },
             "y": {
-                "aggregate": "mean",
-                "field": "temp_range",
+                "aggregate": "count",
+                "field": "*",
                 "type": "quantitative"
+            },
+            "color": {
+                "field": "weather",
+                "type": "nominal"
             }
         }
     };

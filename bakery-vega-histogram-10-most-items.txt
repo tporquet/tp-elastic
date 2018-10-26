@@ -38,25 +38,43 @@
     format: {property: "aggregations.range_buckets.buckets"}
   }
 
-  mark: rect
-
-  encoding: {
-    x: {
-      field: key
-      type : ordinal
-      sort: {
+  "transform": [{
+    "window": [{
+      "op": "sum",
+      "field": "doc_count",
+      "as": "totalSales"
+    }],
+    "frame": [null, null]
+  },
+    {
+      "calculate": "datum.doc_count/datum.totalSales * 100",
+      "as": "percentOfTotal"
+    }],
+  "mark": "bar",
+  "encoding": {
+    "y": {
+      "field": "percentOfTotal",
+      "type": "quantitative",
+      "axis": {
+        "title": "% ventes totales"
+      }
+    },
+    "x": {
+      "field": "key",
+      "type": "nominal",
+      "axis": {
+        "title": "Produit - item"
+      }   
+     sort: {
         op : mean
-        field: doc_count
+        field: percentOfTotal
         order : descending
-      }            
-    }
-    y: {
-      field: doc_count
-      type : quantitative
+      }         
     }
     color : {
       field : key
       type  : nominal
     }    
   }
+
 }

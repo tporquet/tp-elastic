@@ -1,0 +1,58 @@
+{
+
+
+  $schema: https://vega.github.io/schema/vega-lite/v2.json
+  title: Event counts from all indexes
+
+  // Define the data source
+  data: {
+    url: {
+
+
+      // Apply dashboard context filters when set
+      %context%: true
+      // Filter the time picker (upper right corner) with this field
+
+
+      // Which index to search
+      index: _all
+      // Aggregate data by the time field into time buckets, counting the number of documents in each bucket.
+      body: {
+        "aggs": {
+          "range_buckets": {
+            "terms": {
+              "field": "item.keyword",
+              "size": 10,
+              "order": {
+                "_count": "desc"
+              }
+            }
+          }
+        }
+        
+        // Speed up the response by only including aggregation results
+        size: 0
+      }
+    }
+
+    format: {property: "aggregations.range_buckets.buckets"}
+  }
+
+  mark: rect
+
+  encoding: {
+    x: {
+      field: key
+      type : ordinal
+      sort: {
+        op : mean
+        field: doc_count
+        order : descending
+      }            
+    }
+    y: {
+      field: doc_count
+      type : quantitative
+    }
+  }
+}

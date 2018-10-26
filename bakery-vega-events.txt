@@ -1,0 +1,60 @@
+{
+
+  $schema: https://vega.github.io/schema/vega-lite/v2.json
+  title: Event counts from all indexes
+
+  // Define the data source
+  data: {
+    url: {
+
+      %context%: true
+      %timefield%:  transaction_dt
+
+
+      // Which index to search
+      index: tp_kib_bakery
+  
+      body: {
+        aggs: {
+          time_buckets: {
+            date_histogram: {
+
+              field:  transaction_dt
+
+              interval: {%autointerval%: true}
+
+              extended_bounds: {
+
+                min: {%timefilter%: "min"}
+                max: {%timefilter%: "max"}
+              }
+
+              min_doc_count: 0
+            }
+          }
+        }
+
+        size: 0
+      }
+    }
+
+    format: {property: "aggregations.time_buckets.buckets"}
+  }
+
+  //Overlaying lines and point markers - OLPM
+  "mark": {"type": "area", "line": true, "point": true},
+
+  encoding: {
+    x: {
+      field: key
+      type: temporal
+      axis: {title: false} // Customize X axis format
+    }
+    y: {
+      field: doc_count
+      type: quantitative
+      axis: {title: "Document count"}
+    }
+  }
+}
+

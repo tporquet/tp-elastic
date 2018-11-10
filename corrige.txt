@@ -75,3 +75,6 @@ DELETE /_template/template_tp_formation-*
 # en curl
 curl -XDELETE "http://localhost:9200/tp_kib_formation"
 curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+
+# Rechercher les données
+$ELK_HOME/logstash/6.4.1/bin/logstash -f ls-formation-csv.conf 

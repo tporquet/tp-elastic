@@ -272,3 +272,57 @@ GET /tp_kib_formation/_search
     }
   }
 }
+
+#full-text-3-corr
+# dotnet
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "dotnet",
+      "fields": ["titre_fr", "titre_fr.fr","titre_fr.custom"],
+      "type": "most_fields",
+      "tie_breaker": 0.3
+    }
+  }
+}
+
+
+
+GET /tp_kib_formation/_analyze
+{
+  "field" : "titre_fr.custom",  
+  "text" : "dotnet"
+}
+
+
+# Supprimer les données et le template
+curl -XDELETE "http://localhost:9200/tp_kib_formation"
+curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+
+# charger les données - template => "/tp-elastic/data/template_tp_formation.json"
+
+
+
+# dotnet
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "dotnet",
+      "fields": ["titre_fr", "titre_fr.fr","titre_fr.custom"],
+      "type": "most_fields",
+      "tie_breaker": 0.3
+    }
+  }
+}
+
+
+
+GET /tp_kib_formation/_analyze
+{
+  "field" : "titre_fr.custom",  
+  "text" : "dotnet"
+}
+
+

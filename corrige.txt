@@ -326,3 +326,15 @@ GET /tp_kib_formation/_analyze
 }
 
 
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "BART",
+      "fields": ["titre_fr", "titre_fr.fr", "titre_fr.custom"],
+      "type": "most_fields",
+      "tie_breaker": 0.3,
+      "fuzziness": 1
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "index_patterns": [
+    "tp_kib_countries"
+  ],
+  "mappings": {
+    "doc" : {
+      "properties": {
+              "location": { "type" : "geo_point" }
+          }
+    }
+  },
+  "settings": {
+    "index": {
+         "number_of_shards": "1",
+         "number_of_replicas": "0"
+    }
+  }
+}

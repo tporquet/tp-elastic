@@ -1,28 +1,4 @@
-# Une requete sur le champ theme_fr provoque une erreur car la propriete fielddata n'est pas activée
+curl -XDELETE "http://localhost:9200/_template/template_tp_geo-*"
+curl -XDELETE "http://localhost:9200/tp_kib_countries"
 
-#Par ailleurs, la 1ere requête ne devrait pas vous donner des résultats convenables car le champ theme devrait idéalement être stocké les tokens comme un tableau. 
-# Quel est le thème le plus présent dans le catalogue de formations ?
-GET /tp_kib_formation/_search
-{
-    "size" : 0,
-    "aggs" : { 
-        "popular_terms" : { 
-            "terms" : { 
-              "field" : "theme_fr.keyword",
-              "size": 20
-            }
-        }
-    }
-}
-
-GET /tp_kib_formation/_analyze
-{
-  "field": "theme_fr.custom",
-  "text" :  "ajax,fwk-java,th-java,java-web,web"
-}
-
-
-#Modifier le chargement des données en créant un champ themes qui stockera les tokens comme un tableau de valeur. 
-
-curl -XDELETE "http://localhost:9200/tp_kib_formation"
-curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+$ELK_HOME/logstash/6.4.1/bin/logstash -f ls-geo-countries-csv.conf

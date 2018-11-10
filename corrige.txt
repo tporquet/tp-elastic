@@ -1,0 +1,77 @@
+#Effectuer les recherches suivantes
+##java
+##developpement
+##architecte
+
+# java - OK
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "titre_fr": "java"
+    }
+  }
+}
+
+
+# developpement OK
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "titre_fr": "developpement"
+    }
+  }
+}
+
+# architecte : KO
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "titre_fr": "architecte"
+    }
+  }
+}
+
+# car 
+## 1- analyseur standard
+GET /tp_kib_formation/_analyze
+{
+  "text": "architecte",
+  "analyzer": "standard"
+}
+
+## 2 - analyseur standard sur ce champ
+GET /tp_kib_formation
+# "titre_fr": {"type": "text"} ... donc analyseur standard
+
+# Solutions
+## Rajouter un analyseur french
+## Mieux Rajouter un analyseur english car le domain et technique et il est possible d'avoir des mots anglais
+
+
+# si analyseur french => OK
+GET /tp_kib_formation/_analyze
+{
+  "text": "architecte",
+  "analyzer": "french"
+}
+
+# si analyseur english => OK
+GET /tp_kib_formation/_analyze
+{
+  "text": "architecte",
+  "analyzer": "english"
+}
+
+
+# Supprimer les données et le template
+DELETE /tp_kib_formation
+DELETE /_template/template_tp_formation-*
+# Faire un chargement avec le template  => "/tp-elastic/data/template_tp_formation.json"
+# recharger les données avec les nouvelles versions des fichiers logstash
+
+# en curl
+curl -XDELETE "http://localhost:9200/tp_kib_formation"
+curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"

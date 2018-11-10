@@ -2,12 +2,121 @@
     "index_patterns": [
       "tp_kib_formation"
     ],
+  "mappings": {
+    "_default_" : {
+
+        "properties": {
+          "code": {
+            "type": "keyword"
+          },
+          "duree": {
+            "type": "long"
+          },
+          "id": {
+            "type": "text"
+          },
+          "lieu": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "objectif_fr": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              },
+              "fr": {
+                "type": "text",
+                "analyzer" : "french"
+              }
+            }
+          },
+          "pitch_fr": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              },
+              "fr": {
+                "type": "text",
+                "analyzer" : "french"
+              }
+            }
+          },
+          "prerequis_fr": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              },
+              "fr": {
+                "type": "text",
+                "analyzer" : "french"
+              }
+            }
+          },
+          "reqcode": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "theme_fr": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "titre_fr": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              },
+              "fr": {
+                "type": "text",
+                "analyzer" : "french"
+              },
+              "en": {
+                "type": "text",
+                "analyzer" : "english"
+              }
+            }
+          },
+          "ville": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
+        }
+
+
+
+    }
+  },
     "settings": {
       "index": {
         "number_of_shards": "1",
         "number_of_replicas": "0"
       }
-    },
-    "mappings": {},
-    "aliases": {}
+    }
 }

@@ -40,3 +40,90 @@ POST /my_index_cars/transactions/_bulk
 { "prix" : 20000, "couleur" : "red", "constructeur" : "renault", "date_vente" : "2017-11-15" }
 { "index": {}}
 { "prix" : 100000, "couleur" : "red", "constructeur" : "porsche", "date_vente" : "2017-01-21" }
+
+
+
+# Quelles sont les ventes mensuels visualisées sous forme d'histogramme
+GET /my_index_cars/_search
+{
+    "size": 0,
+    "aggs" : {
+        "ventes_mensuelles" : {
+            "date_histogram" : {
+                "field" : "date_vente",
+                "interval" : "month",
+                "format": "yyyy-MM-dd"
+            },
+            "aggs": {
+                "ventes": {
+                    "sum": {
+                        "field": "prix"
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+# En vous aidant de la documentation en ligne, rajouter à l'histogramme précédent le cumul des ventes
+# rubrique sur les pipeline aggregations
+GET /my_index_cars/_search
+{
+    "size": 0,
+    "aggs" : {
+        "ventes_mensuelles" : {
+            "date_histogram" : {
+                "field" : "date_vente",
+                "interval" : "month",
+                "format": "yyyy-MM-dd"
+            },
+            "aggs": {
+                "ventes": {
+                    "sum": {
+                        "field": "prix"
+                    }
+                },
+                "cumulative_sales": {
+                    "cumulative_sum": {
+                        "buckets_path": "ventes" 
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+# En vous aidant de la documentation en ligne, rajouter à l'histogramme le mois présentant le meilleur chiffre d'affaires
+# rubrique sur les pipeline aggregations
+GET /my_index_cars/_search
+{
+    "size": 0,
+    "aggs" : {
+        "ventes_mensuelles" : {
+            "date_histogram" : {
+                "field" : "date_vente",
+                "interval" : "month",
+                "format": "yyyy-MM-dd"
+            },
+            "aggs": {
+                "ventes": {
+                    "sum": {
+                        "field": "prix"
+                    }
+                },
+                "cumulative_sales": {
+                    "cumulative_sum": {
+                        "buckets_path": "ventes" 
+                    }
+                }                
+            }
+        },
+        "ventes_mens_max": {
+            "max_bucket": {
+                "buckets_path": "ventes_mensuelles>ventes" 
+            }
+        }        
+    }
+}

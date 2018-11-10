@@ -1,6 +1,3 @@
-# Une requete sur le champ theme_fr provoque une erreur car la propriete fielddata n'est pas activée
-
-#Par ailleurs, la 1ere requête ne devrait pas vous donner des résultats convenables car le champ theme devrait idéalement être stocké les tokens comme un tableau. 
 # Quel est le thème le plus présent dans le catalogue de formations ?
 GET /tp_kib_formation/_search
 {
@@ -8,21 +5,247 @@ GET /tp_kib_formation/_search
     "aggs" : { 
         "popular_terms" : { 
             "terms" : { 
-              "field" : "theme_fr.keyword",
+              "field" : "themes.keyword",
               "size": 20
             }
         }
     }
 }
 
-GET /tp_kib_formation/_analyze
+
+# Faire une requête des formations ayant Java dans le pitch
+# Avec une agrégation sur le thème et une sur la durée 
+GET /tp_kib_formation/_search
 {
-  "field": "theme_fr.custom",
-  "text" :  "ajax,fwk-java,th-java,java-web,web"
+    "size" : 0,
+    "query": 
+    {
+      "match": {
+        "pitch_fr.custom": "java"
+      }
+    }, 
+    "aggs" : { 
+        "popular_terms" : { 
+            "terms" : { 
+              "field" : "themes.keyword",
+              "size": 5,
+              "order" : { "_count" : "desc" }
+            }
+        },
+        "durees" : { 
+            "terms" : { 
+              "field" : "duree",
+              "order" : { "_key" : "desc" }              
+            }
+        }        
+        
+    }
+}
+
+#Avec une agrégation par requête sur la durée : durées strictement inférieures à 2 jours, entre 2 et 4 jours, supérieures ou égales à 4 jours
+GET /tp_kib_formation/_search
+{
+    "size": 0, 
+    "_source": [ "pitch_fr.keyword", "duree" ],
+    "query": 
+    {
+      "match": {
+        "pitch_fr.custom": "java"
+      }
+    }, 
+    "aggs": {
+      "durees": {
+        "filters": {
+          "filters": {
+            "courtes":{ "range": { "duree": { "lt": "2" }}},
+            "moyennes":{ "range": {"duree": { "gte": "2" ,"lt": "4"}}},
+            "longues":{ "range": { "duree": { "gte": "4" }}}
+          }
+        }
+      }
+    }
 }
 
 
-#Modifier le chargement des données en créant un champ themes qui stockera les tokens comme un tableau de valeur. 
+#Avec une agrégation par requête sur la durée : durées strictement inférieures à 2 jours, entre 2 et 4 jours, supérieures ou égales à 4 jours
+# Autre methode
+GET /tp_kib_formation/_search
+{
+    "size": 0, 
+    "_source": [ "pitch_fr.keyword", "duree" ],
+    "query": 
+    {
+      "match": {
+        "pitch_fr.custom": "java"
+      }
+    }, 
+    "aggs" : { 
+        "duree_courtes" : { 
+            "filter": { "range": { "duree": { "lt": "2" }}}
+        },        
+        "duree_moyenne" : 
+        { 
+            "filter": 
+            { 
+              "range": 
+              {
+                "duree": 
+                { 
+                  "gte": "2" ,
+                  "lt": "4"
+                }
+              }
+            }
+        },
+        "duree_longues" : { 
+            "filter": { "range": { "duree": { "gte": "4" }}}
+        }        
+        
+    }
+}
 
-curl -XDELETE "http://localhost:9200/tp_kib_formation"
-curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+
+#Avec une agrégation sur le thème et une sur la durée, en filtrant le thème sur javaee
+GET /tp_kib_formation/_search
+{
+    "size" : 0,
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match": {
+        "pitch_fr.custom": "java"
+      }}
+      ],
+      "filter": 
+      {
+        "term": {
+          "themes.keyword": "javaee"
+        }
+      }
+    }
+  },    
+    "aggs" : { 
+        "popular_terms" : { 
+            "terms" : { 
+              "field" : "themes.keyword",
+              "size": 5,
+              "order" : { "_count" : "desc" }
+            }
+        },
+        "durees" : { 
+            "terms" : { 
+              "field" : "duree",
+              "order" : { "_key" : "desc" }              
+            }
+        }        
+        
+    }
+}
+
+# Avec une agrégation sur le thème et une sur la durée, en filtrant le thème sur javaee, sans modifier les résultats de la facette sur la durée
+GET /tp_kib_formation/_search
+{
+    "size" : 0,
+  "query": { 
+    "match": {
+      "pitch_fr.custom": "java"
+    }
+  },    
+    "aggs" : { 
+        "javaee-filter" : {
+          "filter": {"term": {
+            "themes.keyword": "javaee"
+          }},
+          "aggs": {
+            "javaee-terms": {
+              "terms": {
+                "field": "themes.keyword"
+              }
+            }
+          }
+        },
+        "durees" : { 
+            "terms" : { 
+              "field" : "duree",
+              "order" : { "_key" : "desc" }              
+            }
+        }        
+        
+    }
+}
+
+
+# Agregations imbriquées theme puis durée
+GET /tp_kib_formation/_search
+{
+    "size" : 0,
+    "query": 
+    {
+      "match": {
+        "pitch_fr.custom": "java"
+      }
+    }, 
+    "aggs" : { 
+        "popular_terms" : { 
+            "terms" : { 
+              "field" : "themes.keyword",
+              "size": 5,
+              "order" : { "_count" : "desc" }
+            },
+            "aggs": {
+               "durees" : { 
+                    "terms" : { 
+                      "field" : "duree",
+                      "order" : { "_key" : "desc" }              
+                    }
+                }        
+            }
+        }
+    }
+}
+
+
+#Combien de formations ayant Java dans le pitch ont une durée de 4 jours ou plus ?
+# Réponse 1 - agrégation de type filtre
+GET /tp_kib_formation/_search
+{
+    "size": 0, 
+    "_source": [ "pitch_fr.keyword", "duree" ],
+    "query": 
+    {
+      "match": {
+        "pitch_fr.custom": "java"
+      }
+    }, 
+    "aggs": {
+      "durees": {
+        "filters": {
+          "filters": {
+            "longues":{ "range": { "duree": { "gte": "4" }}}
+          }
+        }
+      }
+    }
+}
+
+# Réponse 2 - query sans agrégation
+GET /tp_kib_formation/_search
+{
+  "size": 0,   
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {
+          "pitch_fr.custom": "java"
+        }}
+      ],
+      "filter": {
+        "range": {
+          "duree": {
+            "gte": 4
+          }
+        }
+      }
+    }
+  }
+}

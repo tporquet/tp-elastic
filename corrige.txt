@@ -2,3 +2,194 @@ curl -XDELETE "http://localhost:9200/_template/template_tp_geo-*"
 curl -XDELETE "http://localhost:9200/tp_kib_countries"
 
 $ELK_HOME/logstash/6.4.1/bin/logstash -f ls-geo-countries-csv.conf
+
+
+# Quelle est la densité de population classée par ordre décroissant (donner les 10 premiers pays) ???
+GET /tp_kib_countries/_search
+{
+  "size": 20, 
+  "_source": [ "region", "country","pop_density" ],
+  "sort": [
+    {
+      "pop_density": {
+        "order": "desc"
+      }
+    }
+  ], 
+  "query": {
+    "match_all": {}
+  }
+}
+
+# il n'est pas nécessaire de le faire en tant qu'aggregation
+GET /tp_kib_countries/_search
+{
+  "size": 0, 
+  "aggs": 
+  {
+    "countries" : {
+      "terms": {
+        "field": "country.keyword",
+        "order": {
+          "pop_density_max": "desc"
+        }
+      },
+      "aggs": {
+        "pop_density_max": {
+          "max": {
+            "field": "pop_density"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+# mortalité par région trié par ordre décroissant 
+GET /tp_kib_countries/_search
+{
+  "size": 0, 
+  "aggs": 
+  {
+    "region" : {
+      "terms": {
+        "field": "region.keyword",
+              "order": {
+                "mortalite_moy" : "desc" 
+              }        
+      },
+      "aggs": {
+        "mortalite_moy": {
+          "avg": {
+            "field": "deathrate"
+          }
+        }
+      }
+    }
+  }
+}
+
+# Taux de natalité (birthrate) par région trié par ordre décroissant
+GET /tp_kib_countries/_search
+{
+  "size": 0, 
+  "aggs": 
+  {
+    "region" : {
+      "terms": {
+        "field": "region.keyword",
+              "order": {
+                "birthrate_avg" : "desc" 
+              }        
+      },
+      "aggs": {
+        "birthrate_avg": {
+          "avg": {
+            "field": "birthrate"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+# rajouter à la requête précédente le min et le max
+GET /tp_kib_countries/_search
+{
+   "size" : 0,
+   "aggs": {
+      "region": {
+         "terms": {
+            "field": "region.keyword"
+         },
+         "aggs": {
+            "birthrate_avg": { "avg": { "field": "birthrate" }
+            },
+            "country" : {
+                "terms" : {
+                    "field" : "region.keyword"
+                },
+                "aggs" : { 
+                    "min_birthrate" : { "min": { "field": "birthrate"} }, 
+                    "max_birthrate" : { "max": { "field": "birthrate"} } 
+                }
+            }
+         }
+      }
+   }
+}
+
+
+# puis le min et le max global par continent
+GET /tp_kib_countries/_search
+{
+   "size" : 0,
+   "aggs": {
+      "region": {
+         "terms": {
+            "field": "region.keyword"
+         },
+         "aggs": {
+            "birthrate_avg": { "avg": { "field": "birthrate" }
+            },
+            "country" : {
+                "terms" : {
+                    "field" : "region.keyword"
+                },
+                "aggs" : { 
+                    "min_birthrate" : { "min": { "field": "birthrate"} }, 
+                    "max_birthrate" : { "max": { "field": "birthrate"} } 
+                }
+            }
+         }
+      },
+      "max_birthrate": {
+            "max_bucket": {
+                "buckets_path": "region>birthrate_avg" 
+            }
+        },
+      "min_birthrate": {
+            "min_bucket": {
+                "buckets_path": "region>birthrate_avg" 
+            }
+        }              
+   }
+}
+
+
+
+
+# filter la requête précédente sur la région asie (clé = "ASIA(EX.NEAREAST)")
+GET /tp_kib_countries/_search
+{
+   "size" : 0,
+   "query": {
+     "constant_score": {
+       "filter": {"term": {
+         "region.keyword": "ASIA(EX.NEAREAST)"
+       }}
+     }
+   }, 
+   "aggs": {
+      "region": {
+         "terms": {
+            "field": "region.keyword"
+         },
+         "aggs": {
+            "birthrate_avg": { "avg": { "field": "birthrate" }
+            },
+            "country" : {
+                "terms" : {
+                    "field" : "region.keyword"
+                },
+                "aggs" : { 
+                    "min_birthrate" : { "min": { "field": "birthrate"} }, 
+                    "max_birthrate" : { "max": { "field": "birthrate"} } 
+                }
+            }
+         }
+      }
+   }
+}

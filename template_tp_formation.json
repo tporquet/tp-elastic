@@ -1,122 +1,78 @@
 {
-    "index_patterns": [
+  "index_patterns": [
       "tp_kib_formation"
-    ],
+  ],
   "mappings": {
     "_default_" : {
 
-        "properties": {
-          "code": {
-            "type": "keyword"
-          },
-          "duree": {
-            "type": "long"
-          },
-          "id": {
-            "type": "text"
-          },
-          "lieu": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          },
-          "objectif_fr": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              },
-              "fr": {
-                "type": "text",
-                "analyzer" : "french"
-              }
-            }
-          },
-          "pitch_fr": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              },
-              "fr": {
-                "type": "text",
-                "analyzer" : "french"
-              }
-            }
-          },
-          "prerequis_fr": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              },
-              "fr": {
-                "type": "text",
-                "analyzer" : "french"
-              }
-            }
-          },
-          "reqcode": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          },
-          "theme_fr": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          },
-          "titre_fr": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              },
-              "fr": {
-                "type": "text",
-                "analyzer" : "french"
-              },
-              "en": {
-                "type": "text",
-                "analyzer" : "english"
-              }
-            }
-          },
-          "ville": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
+      "dynamic_templates": [
+        {
+          "fr_strings": {
+            "match_mapping_type": "string",
+            "match":   "*_fr",
+            "mapping": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                },
+                "fr": {
+                  "type": "text",
+                  "analyzer" : "french"
+                },
+                "en": {
+                  "type": "text",
+                  "analyzer" : "french"
+                },                
+                "custom": {
+                  "type": "text",
+                  "analyzer" : "custom_french"
+                }                                                
               }
             }
           }
         }
-
-
-
+      ]
     }
   },
-    "settings": {
-      "index": {
-        "number_of_shards": "1",
-        "number_of_replicas": "0"
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "0",
+         "analysis": {
+         "filter": {
+          "french_elision": {
+            "type": "elision",
+            "articles_case": true,
+            "articles": ["l", "m", "t", "qu", "n", "s", "j", "d", "c", "jusqu", "quoiqu", "lorsqu", "puisqu"]
+          },
+          "french_stop": {
+            "type":       "stop",
+            "stopwords":  "_french_"
+          },
+          "french_keywords": {
+            "type":       "keyword_marker",
+            "keywords":   ["dotnet"]
+          },
+          "french_stemmer": {
+            "type": "stemmer",
+            "language": "light_french"
+          }
+        },
+        "analyzer": {
+          "custom_french": {
+            "tokenizer": "whitespace",
+            "filter": [
+              "french_elision",
+              "lowercase",
+              "french_stop",
+              "french_stemmer",
+              "french_keywords"
+            ]
+          }
+        }
       }
     }
+  }
 }

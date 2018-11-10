@@ -1,3 +1,5 @@
+#### full-text-1
+
 #Effectuer les recherches suivantes
 ##java
 ##developpement
@@ -34,6 +36,8 @@ GET /tp_kib_formation/_search
   }
 }
 
+#### full-text-1-corr
+
 # car 
 ## 1- analyseur standard
 GET /tp_kib_formation/_analyze
@@ -69,12 +73,202 @@ GET /tp_kib_formation/_analyze
 # Supprimer les données et le template
 DELETE /tp_kib_formation
 DELETE /_template/template_tp_formation-*
+
+curl -XDELETE "http://localhost:9200/tp_kib_formation"
+curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+
 # Faire un chargement avec le template  => "/tp-elastic/data/template_tp_formation.json"
-# recharger les données avec les nouvelles versions des fichiers logstash
+
+
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "titre_fr.en": "architecte"
+    }
+  }
+}
+
+GET /tp_kib_formation/_search
+{
+  "query": 
+  {
+    "multi_match": {
+      "query": "architecte",
+      "fields": ["titre_fr","titre_fr.fr","titre_fr.en^4"],
+      "type": "most_fields",
+      "tie_breaker": 0.3
+    }  
+  }
+}
+
+
+#gwt ou mvc ou angularjs dans le champ description
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "description_fr": "gwt mvc angularjs"
+    }
+  }
+}
+
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "description_fr": {
+        "query": "gwt mvc angularjs",
+        "operator": "or"
+      }
+    }
+  }
+}
+
+
+#mvc et java dans le champ pitch
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "description_fr": {
+        "query": "mvc java",
+        "operator": "and"
+      }
+    }
+  }
+}
+
+#java et web dans le champ description, avec un durée inférieure à 3 jours
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {
+          "description_fr": "java web"
+        }}
+      ],
+      "filter": {
+        "range": {
+          "duree": {
+            "lte": 3
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"multi_match": {
+          "query": "java web",
+          "fields": ["*_fr","description_fr^5","description_fr.fr^10"],
+          "type": "best_fields",
+          "tie_breaker": 0.3
+        }}
+      ],
+      "filter": {
+        "range": {
+          "duree": {
+            "lte": 3
+          }
+        }
+      }
+    }
+  }
+}
+
+
+# nosql dans un des champs sans modifier le mapping
+# Autre option : copy_to
+GET /tp_kib_formation/_search
+{
+  "query": 
+  {
+    "multi_match": {
+      "query": "nosql",
+      "fields": ["*_fr"],
+      "type": "best_fields",
+      "tie_breaker": 0.3
+    }  
+  }
+}
+
+# Autre option : 
+## Utiliser copy_to mais il faut modifier le mapping et réindexer
+
+# C# dans description
+# C'est le C++ qui remonte en premier
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "description_fr": "C#"
+    }
+  }
+}
+
+
+# solution : utiliser un whitespace tokenizer à la place du standard tokenizer
+
+# Supprimer les données et le template
+DELETE /tp_kib_formation
+DELETE /_template/template_tp_formation-*
 
 # en curl
 curl -XDELETE "http://localhost:9200/tp_kib_formation"
 curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
 
+# Faire un chargement avec le template  => "/tp-elastic/data/template_tp_formation.json"
+
 # Rechercher les données
 $ELK_HOME/logstash/6.4.1/bin/logstash -f ls-formation-csv.conf 
+
+# Analyse
+GET /tp_kib_formation/_analyze
+{
+  "field" : "description_fr.custom",  
+  "text" : "C++"
+}
+
+
+# C# dans description
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "description_fr.custom": "C#"
+    }
+  }
+}
+
+
+# C++ dans description
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "match": {
+      "description_fr.custom": "C++"
+    }
+  }
+}
+
+# trouve toutes les descriptions contenant un Cxx (C++ - C# )
+GET /tp_kib_formation/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "C#",
+      "fields": ["description_fr", "description_fr.fr", "description_fr.custom^10"],
+      "type": "most_fields",
+      "tie_breaker": 0.3
+    }
+  }
+}

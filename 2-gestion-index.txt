@@ -1,0 +1,235 @@
+# Créer le template template_tp_exos avec les caractéristiques suivantes ...
+PUT /_template/template_tp_exos
+{
+  "index_patterns": ["my_index*","test*","exo*"],
+  "settings": 
+  {
+    "number_of_shards" : 1,
+    "number_of_replicas" : 0   
+  }
+}
+
+
+#Créer un premier index avec les caractéristiques suivantes
+PUT /exo_formation_v1
+{
+  "mappings": 
+  {
+    "_doc":
+    {
+    "properties": 
+    {
+      "code" : {"type": "text"},
+      "duree" : {"type": "integer"},
+      "theme" : {"type": "text"}      
+    }      
+    }
+  }
+}
+
+GET /exo_formation_v1
+
+# Indexer les données avec la requête REST ci-dessous
+POST /exo_formation_v1/_doc/_bulk
+{ "index": { "_id": 1 }}
+{"code" : "DW-ACQ", "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 2 }}
+{"code" : "DW-ANM",  "duree" : 2, "theme" : "web"}
+{ "index": { "_id": 3 }}
+{"code" : "DW-AEM",  "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 4 }}
+{"code" : "MP-APMF",  "duree" : 3, "theme" : "agile"}
+
+
+#Créer un deuxième index
+PUT /exo_formation_v2
+{
+  "mappings": 
+  {
+    "_doc":
+    {
+    "properties": 
+    {
+      "code" : {"type": "text"},
+      "duree" : {"type": "integer"},
+      "theme" : {"type": "text"}      
+    }      
+    }
+  }
+}
+
+#Créer un alias vers le 1er index
+POST /_aliases
+{
+    "actions" : [
+        { "add" : { "index" : "exo_formation_v1", "alias" : "exo_formation" } }
+    ]
+}
+#Tester la lecture sur l'alias avec un get sur une valeur précédemment indexée
+GET /exo_formation/_doc/1
+
+
+#Tester l'écriture sur l'alias
+PUT /exo_formation/_doc/5
+{
+    "code": "PO-ALF",
+    "duree" : 3,
+    "theme" : "cms,th-java"
+}
+
+
+#Faire pointer l’alias vers les 2 index avec
+POST /_aliases
+{
+   "actions" : [
+      { "add" : { "index" : "exo_formation_v1", "alias" : "exo_formation" }},
+      { "add" : { "index" : "exo_formation_v2", "alias" : "exo_formation","is_write_index":true}}
+    ]
+}
+
+
+#Lister les alias
+GET /_alias/exo_formation
+
+
+#Tester l'écriture sur l'alias
+PUT /exo_formation/_doc/6
+{
+    "code": "DW-PERF",
+    "duree" : 3,
+    "theme" : "methodo,web"
+}
+
+
+# Compter le nombre de données indexées
+## Alias
+GET /exo_formation/_doc/_count
+{
+}
+# Index 1
+GET /exo_formation_v1/_doc/_count
+{
+}
+
+# Index 2
+GET /exo_formation_v2/_doc/_count
+{
+}
+
+
+#Supprimer les alias et vérifier qu’il l’a bien été en listant les alias
+DELETE /exo_formation_v2/_alias/exo_formation
+
+GET /_alias/exo_formation
+
+
+#Supprimer l’index exo_formation_v2 et vérifier qu’il l’a bien été en testant son existence
+DELETE /exo_formation_v2
+
+HEAD /exo_formation_v2
+
+
+
+#################################
+#### TP3 - Recherches structurées ####
+#################################
+
+# Trouver le document dont le productId est exactement "XHDK-A-1293-#fJ3" 
+GET /exo_formation_v1/_doc/_search
+{
+    "query" : {
+        "constant_score" : {
+          "filter": 
+          {
+            "term": {
+              "productID" :"DW-ACQ"
+            }
+          }
+        }
+    }
+}
+
+
+GET /exo_formation_v1/_analyze
+{
+  "field" : "code",  
+  "text" : "DW-ACQ"
+}
+
+
+# Quelle(s) solution(s) peut-on envisager ?
+#Créer un premier index avec les caractéristiques suivantes
+## L'attribut fields utilisé lors de la création d'un field permet d'avoir un champ muni de 2 entrées
+## - productID : valeur indexée en tant que text donc analysée avant indexation
+## - productID.key : valeur indexée en tant que keyword donc indexée tel quel
+PUT /exo_formation_v3 
+{
+  "mappings": 
+  {
+    "_doc":
+    {
+    "properties": 
+    {
+      "code" : {
+        "type": "text",
+        "fields" :
+        {
+          "key" : 
+          {
+             "type" : "keyword"  
+          }
+        }
+      },
+      "duree" : {"type": "integer"},
+      "theme" : {"type": "text"}            
+    }      
+    }
+  }
+}
+
+# Indexer les données avec la requête REST ci-dessous dans l'index nouvellement créé
+POST /exo_formation_v3/_doc/_bulk
+{ "index": { "_id": 1 }}
+{"code" : "DW-ACQ", "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 2 }}
+{"code" : "DW-ANM",  "duree" : 2, "theme" : "web"}
+{ "index": { "_id": 3 }}
+{"code" : "DW-AEM",  "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 4 }}
+{"code" : "MP-APMF",  "duree" : 3, "theme" : "agile"}
+
+# recherche avec compound query
+GET /exo_formation_v3/_doc/_search
+{
+    "query" : 
+    {
+        "constant_score" : 
+        {
+          "filter": 
+          {
+            "term": {
+              "code.key" :"DW-ACQ"
+            }
+          }
+        }
+    }
+}
+
+
+# recherche avec contexte mixte : full-text et filter
+GET /exo_formation_v3/_doc/_search
+{
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match_all": {}}
+      ],
+      "filter": 
+      {
+        "term": {
+          "code.key" :"DW-ACQ"
+        }
+      }
+    }
+  }
+}

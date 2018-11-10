@@ -1,251 +1,42 @@
-# Quel est le thème le plus présent dans le catalogue de formations ?
-GET /tp_kib_formation/_search
+
+
+DELETE /my_index_cars
+
+GET /my_index_cars/_search
 {
-    "size" : 0,
-    "aggs" : { 
-        "popular_terms" : { 
-            "terms" : { 
-              "field" : "themes.keyword",
-              "size": 20
-            }
-        }
-    }
+  
 }
 
-
-# Faire une requête des formations ayant Java dans le pitch
-# Avec une agrégation sur le thème et une sur la durée 
-GET /tp_kib_formation/_search
+PUT /my_index_cars
 {
-    "size" : 0,
-    "query": 
+  "mappings": 
+  {
+    "transactions" :
     {
-      "match": {
-        "pitch_fr.custom": "java"
-      }
-    }, 
-    "aggs" : { 
-        "popular_terms" : { 
-            "terms" : { 
-              "field" : "themes.keyword",
-              "size": 5,
-              "order" : { "_count" : "desc" }
-            }
-        },
-        "durees" : { 
-            "terms" : { 
-              "field" : "duree",
-              "order" : { "_key" : "desc" }              
-            }
-        }        
-        
-    }
-}
-
-#Avec une agrégation par requête sur la durée : durées strictement inférieures à 2 jours, entre 2 et 4 jours, supérieures ou égales à 4 jours
-GET /tp_kib_formation/_search
-{
-    "size": 0, 
-    "_source": [ "pitch_fr.keyword", "duree" ],
-    "query": 
-    {
-      "match": {
-        "pitch_fr.custom": "java"
-      }
-    }, 
-    "aggs": {
-      "durees": {
-        "filters": {
-          "filters": {
-            "courtes":{ "range": { "duree": { "lt": "2" }}},
-            "moyennes":{ "range": {"duree": { "gte": "2" ,"lt": "4"}}},
-            "longues":{ "range": { "duree": { "gte": "4" }}}
-          }
-        }
-      }
-    }
-}
-
-
-#Avec une agrégation par requête sur la durée : durées strictement inférieures à 2 jours, entre 2 et 4 jours, supérieures ou égales à 4 jours
-# Autre methode
-GET /tp_kib_formation/_search
-{
-    "size": 0, 
-    "_source": [ "pitch_fr.keyword", "duree" ],
-    "query": 
-    {
-      "match": {
-        "pitch_fr.custom": "java"
-      }
-    }, 
-    "aggs" : { 
-        "duree_courtes" : { 
-            "filter": { "range": { "duree": { "lt": "2" }}}
-        },        
-        "duree_moyenne" : 
-        { 
-            "filter": 
-            { 
-              "range": 
-              {
-                "duree": 
-                { 
-                  "gte": "2" ,
-                  "lt": "4"
-                }
-              }
-            }
-        },
-        "duree_longues" : { 
-            "filter": { "range": { "duree": { "gte": "4" }}}
-        }        
-        
-    }
-}
-
-
-#Avec une agrégation sur le thème et une sur la durée, en filtrant le thème sur javaee
-GET /tp_kib_formation/_search
-{
-    "size" : 0,
-  "query": { 
-    "bool": { 
-      "must": [
-        { "match": {
-        "pitch_fr.custom": "java"
-      }}
-      ],
-      "filter": 
+      "properties" :
       {
-        "term": {
-          "themes.keyword": "javaee"
-        }
-      }
-    }
-  },    
-    "aggs" : { 
-        "popular_terms" : { 
-            "terms" : { 
-              "field" : "themes.keyword",
-              "size": 5,
-              "order" : { "_count" : "desc" }
-            }
-        },
-        "durees" : { 
-            "terms" : { 
-              "field" : "duree",
-              "order" : { "_key" : "desc" }              
-            }
-        }        
-        
-    }
-}
-
-# Avec une agrégation sur le thème et une sur la durée, en filtrant le thème sur javaee, sans modifier les résultats de la facette sur la durée
-GET /tp_kib_formation/_search
-{
-    "size" : 0,
-  "query": { 
-    "match": {
-      "pitch_fr.custom": "java"
-    }
-  },    
-    "aggs" : { 
-        "javaee-filter" : {
-          "filter": {"term": {
-            "themes.keyword": "javaee"
-          }},
-          "aggs": {
-            "javaee-terms": {
-              "terms": {
-                "field": "themes.keyword"
-              }
-            }
-          }
-        },
-        "durees" : { 
-            "terms" : { 
-              "field" : "duree",
-              "order" : { "_key" : "desc" }              
-            }
-        }        
-        
-    }
-}
-
-
-# Agregations imbriquées theme puis durée
-GET /tp_kib_formation/_search
-{
-    "size" : 0,
-    "query": 
-    {
-      "match": {
-        "pitch_fr.custom": "java"
-      }
-    }, 
-    "aggs" : { 
-        "popular_terms" : { 
-            "terms" : { 
-              "field" : "themes.keyword",
-              "size": 5,
-              "order" : { "_count" : "desc" }
-            },
-            "aggs": {
-               "durees" : { 
-                    "terms" : { 
-                      "field" : "duree",
-                      "order" : { "_key" : "desc" }              
-                    }
-                }        
-            }
-        }
-    }
-}
-
-
-#Combien de formations ayant Java dans le pitch ont une durée de 4 jours ou plus ?
-# Réponse 1 - agrégation de type filtre
-GET /tp_kib_formation/_search
-{
-    "size": 0, 
-    "_source": [ "pitch_fr.keyword", "duree" ],
-    "query": 
-    {
-      "match": {
-        "pitch_fr.custom": "java"
-      }
-    }, 
-    "aggs": {
-      "durees": {
-        "filters": {
-          "filters": {
-            "longues":{ "range": { "duree": { "gte": "4" }}}
-          }
-        }
-      }
-    }
-}
-
-# Réponse 2 - query sans agrégation
-GET /tp_kib_formation/_search
-{
-  "size": 0,   
-  "query": {
-    "bool": {
-      "must": [
-        {"match": {
-          "pitch_fr.custom": "java"
-        }}
-      ],
-      "filter": {
-        "range": {
-          "duree": {
-            "gte": 4
-          }
-        }
+          "couleur": {"type": "keyword"},
+          "constructeur": {"type": "keyword"},
+          "prix": {"type": "long"},
+          "date_vente": {"type": "date"}          
       }
     }
   }
 }
+
+
+POST /my_index_cars/transactions/_bulk
+{ "index": {}}
+{ "prix" : 15000, "couleur" : "red", "constructeur" : "renault", "date_vente" : "2017-10-30" }
+{ "index": {}}
+{ "prix" : 25000, "couleur" : "red", "constructeur" : "renault", "date_vente" : "2017-11-15" }
+{ "index": {}}
+{ "prix" : 40000, "couleur" : "green", "constructeur" : "fiat", "date_vente" : "2017-05-20" }
+{ "index": {}}
+{ "prix" : 15000, "couleur" : "blue", "constructeur" : "kia", "date_vente" : "2017-07-03" }
+{ "index": {}}
+{ "prix" : 12000, "couleur" : "green", "constructeur" : "kia", "date_vente" : "2017-08-09" }
+{ "index": {}}
+{ "prix" : 20000, "couleur" : "red", "constructeur" : "renault", "date_vente" : "2017-11-15" }
+{ "index": {}}
+{ "prix" : 100000, "couleur" : "red", "constructeur" : "porsche", "date_vente" : "2017-01-21" }

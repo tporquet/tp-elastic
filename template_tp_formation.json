@@ -23,7 +23,8 @@
                 },
                 "custom": {
                   "type": "text",
-                  "analyzer" : "custom_french"
+                  "analyzer" : "custom_french",
+                  "fielddata" : true
                 }                                
               }
             }

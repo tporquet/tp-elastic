@@ -26,3 +26,5 @@ GET /tp_kib_formation/_analyze
 
 curl -XDELETE "http://localhost:9200/tp_kib_formation"
 curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+
+$ELK_HOME/logstash/6.4.1/bin/logstash ls-formation-csv.conf

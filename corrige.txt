@@ -1,0 +1,10 @@
+# Créer le template template_tp_exos avec les caractéristiques suivantes ...
+PUT /_template/template_tp_exos
+{
+  "index_patterns": ["my_index*","test*","exo*"],
+  "settings": 
+  {
+    "number_of_shards" : 1,
+    "number_of_replicas" : 0   
+  }
+}

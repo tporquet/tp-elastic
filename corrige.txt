@@ -1,4 +1,4 @@
-curl -XDELETE "http://localhost:9200/tp_kib_formation"
-curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
+curl -XDELETE "http://localhost:9200/_template/template_tp_geo-*"
+curl -XDELETE "http://localhost:9200/tp_kib_countries"
 
-$ELK_HOME/logstash/6.4.1/bin/logstash -f ls-formation-csv.conf
+$ELK_HOME/logstash/6.4.1/bin/logstash -f ls-geo-countries-csv.conf 

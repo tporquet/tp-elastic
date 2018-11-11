@@ -2,3 +2,101 @@ curl -XDELETE "http://localhost:9200/_template/template_tp_geo-*"
 curl -XDELETE "http://localhost:9200/tp_kib_countries"
 
 $ELK_HOME/logstash/6.4.1/bin/logstash -f ls-geo-countries-csv.conf 
+
+
+
+# Quels sont les pays qui ne sont pas bordés par la mer (champ costline) ?
+GET /tp_kib_countries/doc/_search
+{
+  "_source": [ "country", "coastline" ],
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match_all": {}}
+      ],
+      "filter": 
+      {
+        "term": {
+          "coastline": 0.0
+        }
+      }
+    }
+  }
+}
+
+# Quels sont les pays dont le taux de mortalité est supérieur à 20 (champs deathrate) ?
+GET /tp_kib_countries/doc/_search
+{
+  "_source": [ "country", "deathrate" ],  
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match_all": {}}
+      ],
+      "filter": 
+      {
+        "range": {
+          "deathrate": {"gte": 20}
+        }
+      }
+    }
+  }
+}
+
+
+# Quels sont les pays dont le taux de mortalité est supérieur ou égal à 20 et qui ont un taux d'équipement en téléphone inférieur ou égal à 5  (champs deathrate et phones)
+GET /tp_kib_countries/doc/_search
+{
+  "_source": [ "country", "deathrate", "phones" ],  
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match_all": {}}
+      ],
+      "filter": 
+      {
+        "bool": 
+        {
+          "must" :
+          [
+          {
+            "range": {"deathrate": {"gte": 20}} 
+          },
+          {
+            "range": {"phones": {"lte": 5}} 
+          }
+          ]
+        }
+      }
+    }
+  }
+}
+
+
+# Quels sont les pays dont le taux de mortalité est inférieur ou égal à 10 et qui ont un taux d'équipement en téléphone supérieur ou égal à 500 (champs deathrate et phones)
+GET /tp_kib_countries/doc/_search
+{
+  "_source": [ "country", "deathrate", "phones" ],  
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match_all": {}}
+      ],
+      "filter": 
+      {
+        "bool": 
+        {
+          "must" :
+          [
+          {
+            "range": {"deathrate": {"lte": 10}} 
+          },
+          {
+            "range": {"phones": {"gte": 500}} 
+          }
+          ]
+        }
+      }
+    }
+  }
+}

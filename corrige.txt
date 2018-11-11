@@ -1,0 +1,100 @@
+# Trouver le document dont le productId est exactement "XHDK-A-1293-#fJ3" 
+GET /exo_formation_v1/_doc/_search
+{
+    "query" : {
+        "constant_score" : {
+          "filter": 
+          {
+            "term": {
+              "productID" :"DW-ACQ"
+            }
+          }
+        }
+    }
+}
+
+
+GET /exo_formation_v1/_analyze
+{
+  "field" : "code",  
+  "text" : "DW-ACQ"
+}
+
+
+# Quelle(s) solution(s) peut-on envisager ?
+#Créer un premier index avec les caractéristiques suivantes
+## L'attribut fields utilisé lors de la création d'un field permet d'avoir un champ muni de 2 entrées
+## - code : valeur indexée en tant que text donc analysée avant indexation
+## - code.key : valeur indexée en tant que keyword donc indexée tel quel
+PUT /exo_formation_v3 
+{
+  "mappings": 
+  {
+    "_doc":
+    {
+    "properties": 
+    {
+      "code" : {
+        "type": "text",
+        "fields" :
+        {
+          "key" : 
+          {
+             "type" : "keyword"  
+          }
+        }
+      },
+      "duree" : {"type": "integer"},
+      "theme" : {"type": "text"}            
+    }      
+    }
+  }
+}
+
+# Indexer les données avec la requête REST ci-dessous dans l'index nouvellement créé
+POST /exo_formation_v3/_doc/_bulk
+{ "index": { "_id": 1 }}
+{"code" : "DW-ACQ", "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 2 }}
+{"code" : "DW-ANM",  "duree" : 2, "theme" : "web"}
+{ "index": { "_id": 3 }}
+{"code" : "DW-AEM",  "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 4 }}
+{"code" : "MP-APMF",  "duree" : 3, "theme" : "agile"}
+
+# recherche avec compound query
+GET /exo_formation_v3/_doc/_search
+{
+    "query" : 
+    {
+        "constant_score" : 
+        {
+          "filter": 
+          {
+            "term": {
+              "code.key" :"DW-ACQ"
+            }
+          }
+        }
+    }
+}
+
+
+# recherche avec contexte mixte : full-text et filter
+GET /exo_formation_v3/_doc/_search
+{
+  "query": { 
+    "bool": { 
+      "must": [
+        { "match_all": {}}
+      ],
+      "filter": 
+      {
+        "term": {
+          "code.key" :"DW-ACQ"
+        }
+      }
+    }
+  }
+}
+

@@ -1,30 +1,85 @@
-# Une requete sur le champ theme_fr provoque une erreur car la propriete fielddata n'est pas activée
-
-#Par ailleurs, la 1ere requête ne devrait pas vous donner des résultats convenables car le champ theme devrait idéalement être stocké les tokens comme un tableau. 
-# Quel est le thème le plus présent dans le catalogue de formations ?
-GET /tp_kib_formation/_search
-{
-    "size" : 0,
-    "aggs" : { 
-        "popular_terms" : { 
-            "terms" : { 
-              "field" : "theme_fr.keyword",
-              "size": 20
-            }
-        }
-    }
-}
-
-GET /tp_kib_formation/_analyze
-{
-  "field": "theme_fr.custom",
-  "text" :  "ajax,fwk-java,th-java,java-web,web"
-}
-
-
-#Modifier le chargement des données en créant un champ themes qui stockera les tokens comme un tableau de valeur. 
-
 curl -XDELETE "http://localhost:9200/tp_kib_formation"
 curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
 
 $ELK_HOME/logstash/6.4.1/bin/logstash -f ls-formation-csv.conf
+
+
+
+# tri
+#Ecrivez une requête 
+##paginée qui retourne les 20 premiers éléments
+##avec un tri ordre CROISSANT sur le titre_fr.keyword
+GET /tp_kib_formation/_search
+{
+    "from": 0, 
+    "size": 20,       
+    "sort": "titre_fr.keyword",    
+    "query": {
+      "match_all": {}
+    }
+}
+
+# tri
+#Ecrivez une requête 
+##paginée qui retourne les 20 premiers éléments
+##avec un tri ordre DECROISSANT sur le titre_fr.keyword
+GET /tp_kib_formation/_search
+{
+    "from": 0, 
+    "size": 20,       
+    "sort": [
+      {
+        "titre_fr.keyword": {
+          "order": "desc"
+        }
+      }
+    ],     
+    "query": {
+      "match_all": {}
+    }
+}
+
+
+#Ecrivez une requête 
+##paginée qui retourne les 20 premiers éléments
+##avec uniquement les éléments titre_fr et durée
+##avec un tri par ordre CROISSANT sur la durée
+GET /tp_kib_formation/_search
+{
+  "from": 0, 
+  "size": 20,       
+  "_source": [ "titre_fr", "duree" ],
+    "sort": [
+      {
+        "duree": {"order": "asc"}
+      }
+    ],       
+  "query": {
+    "match": {
+      "description_fr": "java"
+    }
+  }
+}
+
+#Ecrivez une requête 
+##paginée qui retourne les 20 premiers éléments
+##avec uniquement les éléments titre_fr et durée
+##avec un tri ordre DECROISSANT sur la durée
+##avec un tri ordre CROISSANT sur le titre
+GET /tp_kib_formation/_search
+{
+  "from": 0, 
+  "size": 20,       
+  "_source": [ "titre_fr", "duree" ],
+    "sort": [
+      {
+        "duree": {"order": "desc"},
+        "titre_fr.keyword": {"order": "asc"}
+      }
+    ],       
+  "query": {
+    "match": {
+      "description_fr": "java"
+    }
+  }
+}

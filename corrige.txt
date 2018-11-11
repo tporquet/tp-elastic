@@ -1,0 +1,60 @@
+# Créer le template template_tp_exos avec les caractéristiques suivantes ...
+PUT /_template/template_tp_exos
+{
+  "index_patterns": ["my_index*","test*","exo*"],
+  "settings": 
+  {
+    "number_of_shards" : 1,
+    "number_of_replicas" : 0   
+  }
+}
+
+
+#Créer un premier index avec les caractéristiques suivantes
+PUT /exo_formation_v1
+{
+  "mappings": 
+  {
+    "_doc":
+    {
+    "properties": 
+    {
+      "code" : {"type": "text"},
+      "duree" : {"type": "integer"},
+      "theme" : {"type": "text"}      
+    }      
+    }
+  }
+}
+
+GET /exo_formation_v1
+
+# Indexer les données avec la requête REST ci-dessous
+POST /exo_formation_v1/_doc/_bulk
+{ "index": { "_id": 1 }}
+{"code" : "DW-ACQ", "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 2 }}
+{"code" : "DW-ANM",  "duree" : 2, "theme" : "web"}
+{ "index": { "_id": 3 }}
+{"code" : "DW-AEM",  "duree" : 5, "theme" : "cms,web"}
+{ "index": { "_id": 4 }}
+{"code" : "MP-APMF",  "duree" : 3, "theme" : "agile"}
+
+
+#Créer un deuxième index
+PUT /exo_formation_v2
+{
+  "mappings": 
+  {
+    "_doc":
+    {
+    "properties": 
+    {
+      "code" : {"type": "text"},
+      "duree" : {"type": "integer"},
+      "theme" : {"type": "text"}      
+    }      
+    }
+  }
+}
+

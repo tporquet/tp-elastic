@@ -74,11 +74,12 @@ GET /tp_kib_formation/_analyze
 DELETE /tp_kib_formation
 DELETE /_template/template_tp_formation-*
 
+# en curl 
 curl -XDELETE "http://localhost:9200/tp_kib_formation"
 curl -XDELETE "http://localhost:9200/_template/template_tp_formation-*"
 
 # Faire un chargement avec le template  => "/tp-elastic/data/template_tp_formation.json"
-
+$ELK_HOME/logstash/6.4.1/bin/logstash -f ls-formation-csv.conf
 
 GET /tp_kib_formation/_search
 {

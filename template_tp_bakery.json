@@ -1,6 +1,6 @@
 {
     "index_patterns": [
-      "tp_kib_formation"
+      "tp_kib_bakery"
     ],
     "settings": {
       "index": {
